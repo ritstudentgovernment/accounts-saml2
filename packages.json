@@ -1,0 +1,5 @@
+{
+  "body-parser": "1.11.0",
+  "fibers": "1.0.5",
+  "passport-saml": "0.9.0"
+}

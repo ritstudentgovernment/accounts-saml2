@@ -1,0 +1,10 @@
+{
+  "saml": {
+    "loginUrl": "/login",
+    "callbackUrl": "/login/callback",
+    "entryPoint": "https://shibboleth-test.main.ad.rit.edu/idp/profile/SAML2/Redirect/SSO",
+    "issuer": "https://evals-test.rit.edu/shibboleth",
+    "decryptionPvk": "/path/to/key.pem",
+    "cert": "/path/to/idp_cert.pem"
+  }
+}
