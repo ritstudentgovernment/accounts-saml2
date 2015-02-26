@@ -5,23 +5,26 @@ This Meteor web application demonstrates SAML2 authentication. It is a wrapper f
 Config
 ======
 
-Supply SAML properties in the Meteor `settings.json` like so:
+Supply passport-saml SAML properties in the Meteor `settings.json` like so:
 
 ```
 {
   "saml": {
     "loginUrl": "/login",
     "callbackUrl": "/login/callback",
-    "entryPoint": "https://shibboleth-test.main.ad.rit.edu/idp/profile/SAML2/Redirect/SSO",
-    "issuer": "https://evals-test.rit.edu/shibboleth",
-    "decryptionPvk": "/path/to/key.pem",
-    "cert": "/path/to/idp_cert.pem"
+    // Supply remaining passport-saml options here.
   }
 }
 ```
 
-See the [Usage](https://github.com/bergie/passport-saml) section of passport-saml documentation for more options.
+For file options, specify a canonical path.
+For URL's, specify a relative path which will be resolved.
 
+There are extra (non passport-saml) options that be provided. They are:
+- `serviceProviderCert`: Path to the Service Provider certificate file.
+- `metadataUrl`: URL which metadata can be read from.
+
+See the [Usage](https://github.com/bergie/passport-saml) section of passport-saml documentation for options that can be specified.
 
 Usage
 =====
@@ -29,5 +32,6 @@ Usage
 From the project root directory, run:
 
 ```
-meteor
+meteor --settings settings.json
 ```
+

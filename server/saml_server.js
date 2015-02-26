@@ -3,12 +3,15 @@ var bodyParser = Meteor.npmRequire('body-parser');
 var saml = Meteor.npmRequire('passport-saml');
 var fs = Meteor.npmRequire('fs');
 
+var samlOpts = {};
+
 var init = function () {
   if (!Accounts.saml) {
     Accounts.saml = {};
   }
   // In Memory Cache. Does not scale beyond a single instance!
   // credentialToken => SAML Response Profile
+
   Accounts.saml._loginResultForCredentialToken = {};
   Accounts.saml.insertCredential = function (credentialToken, profile) {
     Accounts.saml._loginResultForCredentialToken[credentialToken] = {profile: profile};
@@ -21,21 +24,36 @@ var init = function () {
     delete Accounts.saml._loginResultForCredentialToken[credentialToken];
     return result;
   };
+
   RoutePolicy.declare(Meteor.settings.saml.loginUrl, 'network');
   RoutePolicy.declare(Meteor.settings.saml.callbackUrl, 'network');
 
-  Accounts.saml.samlStrategy = new saml.Strategy({
-    callbackUrl: Meteor.absoluteUrl() + Meteor.settings.saml.callbackUrl.substring(1),
-    entryPoint: Meteor.settings.saml.entryPoint,
-    issuer: Meteor.settings.saml.issuer,
-    identifierFormat: null,
-    disableRequestedAuthnContext: true,
-    decryptionPvk: fs.readFileSync(Meteor.settings.saml.decryptionPvk, 'utf-8'),
-    cert: fs.readFileSync(Meteor.settings.saml.cert, 'utf-8'),
-  }, function (profile, done) {
-    debugger;
-    return done(null, profile); 
-  });
+  samlOpts = _.pick(Meteor.settings.saml, "path", "protocol", "callbackUrl",
+               "entryPoint", "issuer", "cert", "privateCert", "decryptionPvk", "additionalParams",
+               "additionalAuthorizeParams", "identifierFormat", "acceptedClockSkewMs",
+               "attributeConsumingServiceIndex", "disableRequestedAuthnContext", "authnContext",
+               "forceAuthn", "validateInResponseTo", "requestIdExpirationPeriodMs",
+               "cacheProvider", "passReqToCallback", "logoutUrl", "additionalLogoutParams");
+
+  if (samlOpts.decryptionPvk) {
+    samlOpts.decryptionPvk = fs.readFileSync(samlOpts.decryptionPvk, 'utf-8');
+  }
+
+  if (samlOpts.cert) {
+    samlOpts.cert = fs.readFileSync(samlOpts.cert, 'utf-8');
+  }
+
+  if (samlOpts.callbackUrl) {
+    samlOpts.callbackUrl = Meteor.absoluteUrl() + samlOpts.callbackUrl.substring(1);
+    console.log(JSON.stringify(samlOpts)); 
+ }
+
+  Accounts.saml.samlStrategy = new saml.Strategy(samlOpts,
+    function (profile, done) {
+      return done(null, profile); 
+    }
+  );
+
 };
 
 init();
@@ -107,5 +125,6 @@ WebApp.connectHandlers
 var onSamlEnd = function (err, res) {
   res.writeHead(200, {'Content-Type': 'text/html'});
   var content = err ?  "An error occured in the SAML Middleware process." : "";
-  res.end(content, 'utf-8');	
-}
+  res.end(content, 'utf-8');
+};
+
