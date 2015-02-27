@@ -33,7 +33,8 @@ var init = function () {
                "additionalAuthorizeParams", "identifierFormat", "acceptedClockSkewMs",
                "attributeConsumingServiceIndex", "disableRequestedAuthnContext", "authnContext",
                "forceAuthn", "validateInResponseTo", "requestIdExpirationPeriodMs",
-               "cacheProvider", "passReqToCallback", "logoutUrl", "additionalLogoutParams");
+               "cacheProvider", "passReqToCallback", "logoutUrl", "additionalLogoutParams",
+               "serviceProviderCert", "metadataUrl");
 
   if (samlOpts.decryptionPvk) {
     samlOpts.decryptionPvk = fs.readFileSync(samlOpts.decryptionPvk, 'utf-8');
@@ -43,10 +44,13 @@ var init = function () {
     samlOpts.cert = fs.readFileSync(samlOpts.cert, 'utf-8');
   }
 
+  if (samlOpts.serviceProviderCert) {
+    samlOpts.serviceProviderCert = fs.readFileSync(samlOpts.serviceProviderCert, 'utf-8');
+  }
+
   if (samlOpts.callbackUrl) {
     samlOpts.callbackUrl = Meteor.absoluteUrl() + samlOpts.callbackUrl.substring(1);
-    console.log(JSON.stringify(samlOpts)); 
- }
+  }
 
   Accounts.saml.samlStrategy = new saml.Strategy(samlOpts,
     function (profile, done) {
@@ -110,6 +114,11 @@ WebApp.connectHandlers
             Accounts.saml.insertCredential(req.body.SAMLResponse, {profile: result});
           });
           onSamlEnd(null, res);
+        }
+        // metadata requests
+        else if (Meteor.settings.saml.metadataUrl && req.url === Meteor.settings.saml.metadataUrl) {
+          res.writeHead(200, {'Content-Type': 'application/xml'});
+          res.end(Accounts.saml.samlStrategy._saml.generateServiceProviderMetadata(samlOpts.serviceProviderCert), 'utf-8');
         }
         // Ignore requests that aren't for SAML.
         else {
