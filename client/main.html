@@ -2,3 +2,12 @@
   <title>Meteor SAML Example</title>
 </head>
 
+<body>
+  {{> samlDemo}}
+</body>
+
+<template name="samlDemo">
+  {{#unless currentUser}}
+    <a href="#" class="saml-login">Login</a>
+  {{/unless}}
+</template>

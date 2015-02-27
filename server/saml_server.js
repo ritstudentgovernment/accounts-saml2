@@ -2,6 +2,7 @@ var Fiber = Meteor.npmRequire('fibers');
 var bodyParser = Meteor.npmRequire('body-parser');
 var saml = Meteor.npmRequire('passport-saml');
 var fs = Meteor.npmRequire('fs');
+var url = Meteor.npmRequire('url');
 
 var samlOpts = {};
 
@@ -16,9 +17,6 @@ var init = function () {
   Accounts.saml.insertCredential = function (credentialToken, profile) {
     Accounts.saml._loginResultForCredentialToken[credentialToken] = {profile: profile};
   };
-  Accounts.saml.hasCredential = function(credentialToken) {
-    return _.has(Accounts.saml._loginResultForCredentialToken, credentialToken);
-  }
   Accounts.saml.retrieveCredential = function(credentialToken) {
     var result = Accounts.saml._loginResultForCredentialToken[credentialToken];
     delete Accounts.saml._loginResultForCredentialToken[credentialToken];
@@ -63,21 +61,14 @@ var init = function () {
 init();
 
 Accounts.registerLoginHandler(function (loginRequest) {
-  // Only apply this handler if a credentialToken exists.
-  var error = new Error("Could not a user with the specified identifier.");
-  if (!loginRequest.credentialToken) {
-    var profile = Accounts.saml.retrieveCredential(loginRequest.credentialToken);
-    if (profile && profile[Meteor.settings.saml.userIdentifier]) {
-      var query = {};
-      query["profile." + Meteor.settings.saml.userIdentifier] = profile[Meteor.settings.saml.userIdentifier];
-      var user = Meteor.users.findOne(query);
-      if (!user) {
-        throw error;
-      } else {
-        return addLoginTokenToUser(user);
-      }
+  if (loginRequest.credentialToken && loginRequest.saml) {
+    var samlResponse = Accounts.saml.retrieveCredential(loginRequest.credentialToken);
+    if (samlResponse) {
+      Meteor.users.update({email: samlResponse.profile.email}, {$set: {email: samlResponse.profile.email}}, {upsert: true});
+      var user = Meteor.users.findOne({email: samlResponse.profile.email});
+      return addLoginTokenToUser(user);
     } else {
-      throw error;
+      throw new Error("Could not find a profile with the specified credentialToken.");
     }
   }
 });
@@ -88,7 +79,7 @@ var addLoginTokenToUser = function (user) {
     $push: {'services.resume.loginTokens': stampedToken}
   });
   return {
-    id: user._id,
+    userId: user._id,
     token: stampedToken.token
   };
 };
@@ -100,7 +91,7 @@ WebApp.connectHandlers
     Fiber(function() {
       try {
         // redirect to IdP (SP -> IdP)
-        if (req.url === Meteor.settings.saml.loginUrl) {
+        if (url.parse(req.url).pathname === Meteor.settings.saml.loginUrl) {
           Accounts.saml.samlStrategy._saml.getAuthorizeUrl(req, function (err, result) {
             res.writeHead(302, {
               'Location': result
@@ -111,7 +102,7 @@ WebApp.connectHandlers
         // callback from IdP (IdP -> SP)
         else if (req.url === Meteor.settings.saml.callbackUrl) {
           Accounts.saml.samlStrategy._saml.validatePostResponse(req.body, function (err, result) {
-            Accounts.saml.insertCredential(req.body.SAMLResponse, {profile: result});
+            Accounts.saml.insertCredential(req.body.RelayState, result);
           });
           onSamlEnd(null, res);
         }
@@ -133,7 +124,6 @@ WebApp.connectHandlers
 
 var onSamlEnd = function (err, res) {
   res.writeHead(200, {'Content-Type': 'text/html'});
-  var content = err ?  "An error occured in the SAML Middleware process." : "";
+  var content = err ?  "An error occured in the SAML Middleware process." : "<html><head><script>window.close()</script></head></html>'";
   res.end(content, 'utf-8');
 };
-
