@@ -1,6 +1,6 @@
 # accounts-saml2
 
-This Meteor web application demonstrates SAML2 authentication. It is a wrapper for the `passport-saml` package. This package will be refactored for generic usage in any Meteor app in the near future.
+This Meteor web application demonstrates SAML2 authentication. It is a wrapper for the `passport-saml` package. It also provides middleware routes for processing login, callback, and metadata requests. This package will be refactored for generic usage in any Meteor app in the near future.
 
 Config
 ======
