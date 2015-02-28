@@ -64,7 +64,7 @@ Accounts.registerLoginHandler(function (loginRequest) {
   if (loginRequest.credentialToken && loginRequest.saml) {
     var samlResponse = Accounts.saml.retrieveCredential(loginRequest.credentialToken);
     if (samlResponse) {
-      Meteor.users.update({email: samlResponse.profile.email}, {$set: {email: samlResponse.profile.email}}, {upsert: true});
+      updateUserProfile(samlResponse);
       var user = Meteor.users.findOne({email: samlResponse.profile.email});
       return addLoginTokenToUser(user);
     } else {
@@ -72,6 +72,21 @@ Accounts.registerLoginHandler(function (loginRequest) {
     }
   }
 });
+
+var updateUserProfile = function (samlResponse) {
+  var profile = {};
+  for (var key in samlResponse.profile) {
+    if (typeof samlResponse.profile[key] == "string") {
+       if (Accounts.saml.isSamlAttribute(key)) {
+         profile[Accounts.saml.getSamlAttributeFriendlyName(key)] = samlResponse.profile[key];
+       }
+       else {
+         profile[key] = samlResponse.profile[key];
+       }
+    }
+  }
+  Meteor.users.update({email: samlResponse.profile.email}, {$set: {email: samlResponse.profile.email, profile: profile}}, {upsert: true});
+};
 
 var addLoginTokenToUser = function (user) {
   var stampedToken = Accounts._generateStampedLoginToken();
@@ -102,9 +117,11 @@ WebApp.connectHandlers
         // callback from IdP (IdP -> SP)
         else if (req.url === Meteor.settings.saml.callbackUrl) {
           Accounts.saml.samlStrategy._saml.validatePostResponse(req.body, function (err, result) {
-            Accounts.saml.insertCredential(req.body.RelayState, result);
+            if (!err) { 
+              Accounts.saml.insertCredential(req.body.RelayState, result);
+            }
+            onSamlEnd(err, res);
           });
-          onSamlEnd(null, res);
         }
         // metadata requests
         else if (Meteor.settings.saml.metadataUrl && req.url === Meteor.settings.saml.metadataUrl) {
