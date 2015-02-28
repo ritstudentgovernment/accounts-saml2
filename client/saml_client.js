@@ -52,10 +52,10 @@ Meteor.loginWithSaml = function(options, callback) {
   options.credentialToken = Random.id();
 
   Accounts.saml.initiateLogin(options, function (error, result) {
-    debugger;
     Accounts.callLoginMethod({
       methodArguments: [{saml: true, credentialToken: options.credentialToken}],
       userCallback: callback
     });
   });
 };
+

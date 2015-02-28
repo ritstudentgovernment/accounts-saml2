@@ -7,23 +7,6 @@ var url = Meteor.npmRequire('url');
 var samlOpts = {};
 
 var init = function () {
-  if (!Accounts.saml) {
-    Accounts.saml = {};
-  }
-  // In Memory Cache. Does not scale beyond a single instance!
-  // credentialToken => SAML Response Profile
-
-  Accounts.saml._loginResultForCredentialToken = {};
-  Accounts.saml.insertCredential = function (credentialToken, profile) {
-    Accounts.saml._loginResultForCredentialToken[credentialToken] = {profile: profile};
-  };
-  Accounts.saml.retrieveCredential = function(credentialToken) {
-    var result = Accounts.saml._loginResultForCredentialToken[credentialToken];
-    delete Accounts.saml._loginResultForCredentialToken[credentialToken];
-    return result;
-  };
-
-  RoutePolicy.declare(Meteor.settings.saml.loginUrl, 'network');
   RoutePolicy.declare(Meteor.settings.saml.callbackUrl, 'network');
 
   samlOpts = _.pick(Meteor.settings.saml, "path", "protocol", "callbackUrl",
@@ -144,3 +127,4 @@ var onSamlEnd = function (err, res) {
   var content = err ?  "An error occured in the SAML Middleware process." : "<html><head><script>window.close()</script></head></html>'";
   res.end(content, 'utf-8');
 };
+
