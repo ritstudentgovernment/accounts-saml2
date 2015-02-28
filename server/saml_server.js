@@ -1,6 +1,6 @@
 var Fiber = Meteor.npmRequire('fibers');
-var bodyParser = Meteor.npmRequire('body-parser');
-var saml = Meteor.npmRequire('passport-saml');
+var bodyParser = Npm.require('body-parser');
+var saml = Npm.require('passport-saml');
 var fs = Meteor.npmRequire('fs');
 var url = Meteor.npmRequire('url');
 
