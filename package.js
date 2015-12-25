@@ -1,8 +1,8 @@
 Package.describe({
-  name: 'ritstudentgovernment:accounts-saml2',
-  summary: 'SAML Authentication for Meteor',
+  name: 'athyuttamre:accounts-saml2',
+  summary: 'SAML Authentication for Meteor, built for Brown University.',
   version: '0.0.1',
-  git: 'https://github.com/ritstudentgovernment/accounts-saml2.git'
+  git: 'https://github.com/athyuttamre/accounts-saml2.git'
 });
 
 Npm.depends({
@@ -12,12 +12,11 @@ Npm.depends({
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom('METEOR@1.0.3.2');
+  api.versionsFrom('METEOR@1.2.1');
   api.use('underscore');
   api.use(['routepolicy','webapp'], ['server']);
   api.use(['accounts-base'], ['client', 'server']);
+  api.use(['random'], ['client', 'server']);
   api.addFiles(['server/attribute_map.js', 'server/credential_cache.js', 'server/saml_server.js'], 'server');
   api.addFiles(['client/saml_client.js'], 'client');
 });
-
-
