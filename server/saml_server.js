@@ -7,9 +7,7 @@ var url = Npm.require('url');
 var samlOpts = {};
 
 var init = function () {
-  RoutePolicy.declare(Meteor.settings.saml.callbackUrl, 'network');
-
-  samlOpts = _.pick(Meteor.settings.saml, "path", "protocol", "callbackUrl",
+  samlOpts = _.pick(Meteor.settings.saml, "protocol", "host", "path", "callbackUrl",
                "entryPoint", "issuer", "cert", "privateCert", "decryptionPvk", "additionalParams",
                "additionalAuthorizeParams", "identifierFormat", "acceptedClockSkewMs",
                "attributeConsumingServiceIndex", "disableRequestedAuthnContext", "authnContext",
@@ -29,9 +27,10 @@ var init = function () {
     samlOpts.serviceProviderCert = fs.readFileSync(samlOpts.serviceProviderCert, 'utf-8');
   }
 
-  if (samlOpts.callbackUrl) {
-    samlOpts.callbackUrl = Meteor.absoluteUrl() + samlOpts.callbackUrl.substring(1);
+  if (!samlOpts.callbackUrl) {
+    samlOpts.callbackUrl = samlOpts.protocol + "://" + samlOpts.host + samlOpts.path;
   }
+  RoutePolicy.declare(samlOpts.path, 'network');
 
   Accounts.saml.samlStrategy = new saml.Strategy(samlOpts,
     function (profile, done) {
@@ -96,7 +95,7 @@ WebApp.connectHandlers
           });
         }
         // callback from IdP (IdP -> SP)
-        else if (req.url === Meteor.settings.saml.callbackUrl) {
+        else if (req.url === Meteor.settings.saml.path) {
           Accounts.saml.samlStrategy._saml.validatePostResponse(req.body, function (err, result) {
             if (!err) { 
               Accounts.saml.insertCredential(req.body.RelayState, result);
