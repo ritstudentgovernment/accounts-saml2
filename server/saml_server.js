@@ -15,14 +15,6 @@ var init = function () {
                "cacheProvider", "passReqToCallback", "logoutUrl", "additionalLogoutParams",
                "serviceProviderCert", "metadataUrl");
 
-  if (samlOpts.decryptionPvk) {
-    samlOpts.decryptionPvk = fs.readFileSync(samlOpts.decryptionPvk, 'utf-8');
-  }
-
-  if (samlOpts.cert) {
-    samlOpts.cert = fs.readFileSync(samlOpts.cert, 'utf-8');
-  }
-
   if (samlOpts.serviceProviderCert) {
     samlOpts.serviceProviderCert = fs.readFileSync(samlOpts.serviceProviderCert, 'utf-8');
   }
