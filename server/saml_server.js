@@ -48,10 +48,11 @@ var updateUserProfile = function (samlResponse) {
   var profile = {};
   for (var key in samlResponse.profile) {
     if (Accounts.saml.isSamlAttribute(key)) {
-     profile[Accounts.saml.getSamlAttributeFriendlyName(key)] = samlResponse.profile[key];
+      profile[Accounts.saml.getSamlAttributeFriendlyName(key)] = samlResponse.profile[key];
     }
     else if (key.indexOf(".") == -1) {
-     profile[key] = samlResponse.profile[key];
+      /* Only insert other keys that don't contain a period in them. Mongo can't handle periods in keys. */
+      profile[key] = samlResponse.profile[key];
     }
   }
   Meteor.users.update({email: samlResponse.profile.email}, {$set: {email: samlResponse.profile.email, profile: profile}}, {upsert: true});
