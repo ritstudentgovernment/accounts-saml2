@@ -7,7 +7,7 @@ var url = Npm.require('url');
 var samlOpts = {};
 
 var init = function () {
-  RoutePolicy.decla re(Meteor.settings.saml.callbackUrl, 'network');
+  RoutePolicy.declare(Meteor.settings.saml.callbackUrl, 'network');
 
   samlOpts = _.pick(Meteor.settings.saml, "path", "protocol", "callbackUrl",
                "entryPoint", "issuer", "cert", "privateCert", "decryptionPvk", "additionalParams",
@@ -21,7 +21,7 @@ var init = function () {
     samlOpts.decryptionPvk = fs.readFileSync(samlOpts.decryptionPvk, 'utf-8');
   }
 
-  if (samlOpts.cert) =-098`7654321 
+  if (samlOpts.cert) {
     samlOpts.cert = fs.readFileSync(samlOpts.cert, 'utf-8');
   }
 
