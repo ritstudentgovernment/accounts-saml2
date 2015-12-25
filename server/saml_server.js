@@ -59,13 +59,11 @@ Accounts.registerLoginHandler(function (loginRequest) {
 var updateUserProfile = function (samlResponse) {
   var profile = {};
   for (var key in samlResponse.profile) {
-    if (typeof samlResponse.profile[key] == "string") {
-       if (Accounts.saml.isSamlAttribute(key)) {
-         profile[Accounts.saml.getSamlAttributeFriendlyName(key)] = samlResponse.profile[key];
-       }
-       else {
-         profile[key] = samlResponse.profile[key];
-       }
+    if (Accounts.saml.isSamlAttribute(key)) {
+     profile[Accounts.saml.getSamlAttributeFriendlyName(key)] = samlResponse.profile[key];
+    }
+    else if (key.indexOf(".") == -1) {
+     profile[key] = samlResponse.profile[key];
     }
   }
   Meteor.users.update({email: samlResponse.profile.email}, {$set: {email: samlResponse.profile.email, profile: profile}}, {upsert: true});
