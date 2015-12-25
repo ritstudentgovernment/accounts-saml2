@@ -47,12 +47,19 @@ Accounts.registerLoginHandler(function (loginRequest) {
 var updateUserProfile = function (samlResponse) {
   var profile = {};
   for (var key in samlResponse.profile) {
-    if (Accounts.saml.isSamlAttribute(key)) {
-      profile[Accounts.saml.getSamlAttributeFriendlyName(key)] = samlResponse.profile[key];
-    }
-    else if (key.indexOf(".") == -1) {
-      /* Only insert other keys that don't contain a period in them. Mongo can't handle periods in keys. */
-      profile[key] = samlResponse.profile[key];
+    var value = samlResponse.profile[key];
+
+    /* Only save values that are Strings or arrays, not objects. This avoids having to make
+     * sure that the inner keys don't have periods.
+     */
+    if (typeof value === "string" || value.constructor === Array) {
+      if (Accounts.saml.isSamlAttribute(key)) {
+        profile[Accounts.saml.getSamlAttributeFriendlyName(key)] = value;
+      }
+      else if (key.indexOf(".") == -1) {
+        /* Only insert other keys that don't contain a period in them. Mongo can't handle periods in keys. */
+        profile[key] = value;
+      }
     }
   }
   Meteor.users.update({email: samlResponse.profile.email}, {$set: {email: samlResponse.profile.email, profile: profile}}, {upsert: true});
