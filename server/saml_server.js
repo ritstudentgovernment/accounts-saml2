@@ -1,7 +1,6 @@
 var Fiber = Npm.require('fibers');
 var bodyParser = Npm.require('body-parser');
 var saml = Npm.require('passport-saml');
-var fs = Npm.require('fs');
 var url = Npm.require('url');
 
 var samlOpts = {};
@@ -15,9 +14,7 @@ var init = function () {
                "cacheProvider", "passReqToCallback", "logoutUrl", "additionalLogoutParams",
                "serviceProviderCert", "metadataUrl");
 
-  if (samlOpts.serviceProviderCert) {
-    samlOpts.serviceProviderCert = fs.readFileSync(samlOpts.serviceProviderCert, 'utf-8');
-  }
+  /* NOTE: Inline all files in settings.json for now */
 
   if (!samlOpts.callbackUrl) {
     samlOpts.callbackUrl = samlOpts.protocol + "://" + samlOpts.host + samlOpts.path;
@@ -91,6 +88,9 @@ WebApp.connectHandlers
           Accounts.saml.samlStrategy._saml.validatePostResponse(req.body, function (err, result) {
             if (!err) { 
               Accounts.saml.insertCredential(req.body.RelayState, result);
+            } else {
+              console.log("err", err);
+              console.log("req.body", req.body);
             }
             onSamlEnd(err, res);
           });
