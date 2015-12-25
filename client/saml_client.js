@@ -17,7 +17,7 @@ Accounts.saml.initiateLogin = function(options, callback, dimensions) {
     }
     if (popupClosed) {
       clearInterval(checkPopupOpen);
-      callback(options.credentialToken);
+      callback(null, options.credentialToken);
     }
   }, 100);
 };
