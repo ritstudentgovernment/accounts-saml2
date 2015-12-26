@@ -7,7 +7,7 @@ Meteor.call("getLoginUrl", function(err, res) {
   loginUrl = res;
 });
 
-Accounts.saml.initiateLogin = function(options, callback, dimensions) {
+Accounts.saml.initiateLogin = function(options, callback) {
   if(options.loginStyle === "redirect") {
     // Redirect
   } else {
@@ -54,6 +54,12 @@ var openCenteredPopup = function(url, width, height) {
 };
 
 Meteor.loginWithSaml = function(options, callback) {
+  // Support a callback without options
+  if (!callback && typeof options === "function") {
+    callback = options;
+    options = null;
+  }
+
   options = options || {};
   options.credentialToken = Random.id();
 
