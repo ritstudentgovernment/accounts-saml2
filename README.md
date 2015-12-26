@@ -16,7 +16,7 @@ Config
 
 To get SAML authentication working on your local machine, you need three things:
 
-1. Run Meteor on SSL using [this guide](http://stackoverflow.com/questions/27963749/setup-https-ssl-on-localhost-for-meteor-development). Make sure SSL is running on port 3000; your app can run on any other port, such as 3100.
+1. Run Meteor on SSL using [nourhardy:ssl](https://atmospherejs.com/nourharidy/ssl). Make sure SSL is running on port 3000; your app can run on any other port, such as 3100.
 2. If developing for Brown University, add an entry to your computer's hosts file for `127.0.0.1` to `local.cis-dev.brown.edu`.
 3. Add the settings below to `settings.json`.
 
@@ -53,6 +53,19 @@ There are extra (non passport-saml) options that be provided. They are:
 - `metadataUrl`: URL which metadata can be read from.
 
 See the [Usage](https://github.com/bergie/passport-saml) section of passport-saml documentation for options that can be specified.
+
+Usage
+=====
+
+In your app, add a button or link to initiate login, for example `<a href="#" class="login">Login</a>`. Then, add the following click handler to your template:
+
+```
+'click .login': function() {
+  Meteor.loginWithSaml(function() {
+    console.log("Welcome " + Meteor.user().profile.givenName + "!");
+  });
+}
+```
 
 Notes
 =====
