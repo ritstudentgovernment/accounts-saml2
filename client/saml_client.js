@@ -8,25 +8,26 @@ Meteor.call("getLoginUrl", function(err, res) {
 });
 
 Accounts.saml.initiateLogin = function(options, callback, dimensions) {
-  // default dimensions that worked well for facebook and google
-  var popup = openCenteredPopup(
-    Meteor.absoluteUrl(loginUrl + "?RelayState=" + options.credentialToken),
-    (dimensions && dimensions.width) || 650,
-    (dimensions && dimensions.height) || 500);
+  if(options.loginStyle === "redirect") {
+    // Redirect
+  } else {
+    // Popup
+    var popup = openCenteredPopup(Meteor.absoluteUrl(loginUrl + 
+      "?RelayState=" + options.credentialToken), 650, 500);
 
-  var checkPopupOpen = setInterval(function() {
-    try {
-      var popupClosed = popup.closed || popup.closed === undefined;
-    } catch (e) {
-      return;
-    }
-    if (popupClosed) {
-      clearInterval(checkPopupOpen);
-      callback(null, options.credentialToken);
-    }
-  }, 100);
+    var checkPopupOpen = setInterval(function() {
+      try {
+        var popupClosed = popup.closed || popup.closed === undefined;
+      } catch (e) {
+        return;
+      }
+      if (popupClosed) {
+        clearInterval(checkPopupOpen);
+        callback(null, options.credentialToken);
+      }
+    }, 100);
+  }
 };
-
 
 var openCenteredPopup = function(url, width, height) {
   var screenX = typeof window.screenX !== 'undefined'
@@ -63,4 +64,3 @@ Meteor.loginWithSaml = function(options, callback) {
     });
   });
 };
-
