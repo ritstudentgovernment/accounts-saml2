@@ -47,10 +47,10 @@ var openCenteredPopup = function(url, width, height) {
   var features = ('width=' + width + ',height=' + height +
                   ',left=' + left + ',top=' + top + ',scrollbars=yes');
 
-  var newwindow = window.open(url, 'Login', features);
-  if (newwindow.focus)
-    newwindow.focus();
-  return newwindow;
+  var popup = window.open(url, 'loginPopup', features);
+  if (popup.focus)
+    popup.focus();
+  return popup;
 };
 
 Meteor.loginWithSaml = function(options, callback) {
