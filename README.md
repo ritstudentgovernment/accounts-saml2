@@ -53,3 +53,8 @@ There are extra (non passport-saml) options that be provided. They are:
 - `metadataUrl`: URL which metadata can be read from.
 
 See the [Usage](https://github.com/bergie/passport-saml) section of passport-saml documentation for options that can be specified.
+
+Notes
+=====
+
+This package gets the user's SAML attributes and stores them in the `User` object's `profile`. This is by default writable by the user themselves. Add a deny rule to the Users collection to avoid this.
