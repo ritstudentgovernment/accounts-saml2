@@ -14,9 +14,9 @@ Npm.depends({
 Package.onUse(function(api) {
   api.versionsFrom('METEOR@1.2.1');
   api.use('underscore');
-  api.use(['routepolicy','webapp'], ['server']);
-  api.use(['accounts-base'], ['client', 'server']);
-  api.use(['random'], ['client', 'server']);
+  api.use(['routepolicy','webapp', 'mongo'], ['server']);
+  api.use(['accounts-base', 'random'], ['client', 'server']);
+
   api.addFiles(['server/attribute_map.js', 'server/credential_cache.js', 'server/saml_server.js'], 'server');
   api.addFiles(['client/saml_client.js'], 'client');
 });

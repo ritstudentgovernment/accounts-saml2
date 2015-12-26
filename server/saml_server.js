@@ -33,17 +33,16 @@ var init = function () {
       return done(null, profile); 
     }
   );
-
 };
 
 init();
 
 Accounts.registerLoginHandler(function (loginRequest) {
   if (loginRequest.credentialToken && loginRequest.saml) {
-    var samlResponse = Accounts.saml.retrieveCredential(loginRequest.credentialToken);
-    if (samlResponse) {
+    var profile = Accounts.saml.retrieveCredential(loginRequest.credentialToken);
+    if (profile) {
       updateUserProfile(samlResponse);
-      var user = Meteor.users.findOne({email: samlResponse.profile.email});
+      var user = Meteor.users.findOne({email: profile.email});
       return addLoginTokenToUser(user);
     } else {
       throw new Error("Could not find a profile with the specified credentialToken.");
@@ -51,7 +50,7 @@ Accounts.registerLoginHandler(function (loginRequest) {
   }
 });
 
-var updateUserProfile = function (samlResponse) {
+var cleanResponseForMongo = function (samlResponse) {
   var profile = {};
   for (var key in samlResponse.profile) {
     var value = samlResponse.profile[key];
@@ -69,7 +68,10 @@ var updateUserProfile = function (samlResponse) {
     }
   }
 
-  // Add or update user
+  return profile;
+}
+
+var updateUserProfile = function (profile) {
   Meteor.users.update({email: samlResponse.profile.email}, 
     {$set: {email: samlResponse.profile.email, profile: profile}}, {upsert: true});
 };
@@ -103,15 +105,18 @@ WebApp.connectHandlers
         }
         // Callback from IdP (IdP -> SP)
         else if (req.url === Meteor.settings.saml.path) {
-          Accounts.saml.samlStrategy._saml.validatePostResponse(req.body, function (err, result) {
+          var credentialToken = null;
+          Accounts.saml.samlStrategy._saml.validatePostResponse(req.body, Meteor.bindEnvironment(function (err, result) {
             if (!err) { 
-              Accounts.saml.insertCredential(req.body.RelayState, result);
+              credentialToken = req.body.RelayState;
+              Accounts.saml.insertProfile(credentialToken, cleanResponseForMongo(result));
             } else {
               console.log("err", err);
               console.log("req.body", req.body);
             }
-            onSamlEnd(err, res);
-          });
+
+            onSamlEnd(err, res, credentialToken);
+          }));
         }
         // Metadata requests
         else if (Meteor.settings.saml.metadataUrl && req.url === Meteor.settings.saml.metadataUrl) {
@@ -129,15 +134,32 @@ WebApp.connectHandlers
     }).run();
 });
 
-var onSamlEnd = function (err, res) {
+var onSamlEnd = function (err, res, credentialToken) {
   res.writeHead(200, {'Content-Type': 'text/html'});
-
   var content;
+
   if(err) {
     console.log(err);
     content = "An error occured in the SAML Middleware process.";
-  } else {
-    content = "<html><head><script>window.close()</script></head></html>";
+  } else if(credentialToken) {
+    console.log(credentialToken);
+    var redirectPath = Accounts.saml.retrieveRedirectPath(credentialToken);
+    console.log(redirectPath);
+    if(redirectPath) {
+      // If redirect login, call loginMethod and redirect to URL.
+      Accounts.callLoginMethod({
+        methodArguments: [{saml: true, credentialToken: credentialToken}],
+        userCallback: function() {
+          res.writeHead(302, {
+            'Location': redirectPath
+          });
+          res.end();
+        }
+      });
+    } else {
+      // If popup login, close popup and let client call loginMethod.
+      content = "<html><head><script>window.close()</script></head></html>";
+    }
   }
 
   res.end(content, 'utf-8');
