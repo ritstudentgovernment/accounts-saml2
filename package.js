@@ -1,7 +1,7 @@
 Package.describe({
   name: 'athyuttamre:accounts-saml2',
   summary: 'SAML Authentication for Meteor, built for Brown University.',
-  version: '0.0.1',
+  version: '0.0.2',
   git: 'https://github.com/athyuttamre/accounts-saml2.git'
 });
 
