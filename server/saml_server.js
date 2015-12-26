@@ -16,6 +16,13 @@ var init = function () {
 
   /* NOTE: Inline all files in settings.json for now */
 
+  /* Make loginUrl accessible from client */
+  Meteor.methods({
+    getLoginUrl: function() {
+      return Meteor.settings.saml.loginUrl;
+    }
+  });
+
   if (!samlOpts.callbackUrl) {
     samlOpts.callbackUrl = samlOpts.protocol + "://" + samlOpts.host + samlOpts.path;
   }

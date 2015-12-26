@@ -2,10 +2,15 @@ if (!Accounts.saml) {
   Accounts.saml = {};
 }
 
+var loginUrl = "login";
+Meteor.call("getLoginUrl", function(err, res) {
+  loginUrl = res;
+});
+
 Accounts.saml.initiateLogin = function(options, callback, dimensions) {
   // default dimensions that worked well for facebook and google
   var popup = openCenteredPopup(
-    Meteor.absoluteUrl("login?RelayState=" + options.credentialToken),
+    Meteor.absoluteUrl(loginUrl + "?RelayState=" + options.credentialToken),
     (dimensions && dimensions.width) || 650,
     (dimensions && dimensions.height) || 500);
 
