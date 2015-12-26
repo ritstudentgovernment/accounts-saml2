@@ -6,9 +6,9 @@ Package.describe({
 });
 
 Npm.depends({
-  'fibers': '1.0.5',
-  'body-parser': '1.12.0',
-  'passport-saml': '0.9.1'
+  'fibers': '1.0.8',
+  'body-parser': '1.14.2',
+  'passport-saml': '0.14.0'
 });
 
 Package.onUse(function(api) {
