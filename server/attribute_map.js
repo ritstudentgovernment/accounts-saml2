@@ -13,29 +13,16 @@ if (!Accounts.saml) {
 //
 // Someday in the future, we should automate the parsing of FriendlyNames.
  
-Accounts.saml._attributeMap = {
+Accounts.saml._attributeMap = _.extend({
+  "urn:oid:0.9.2342.19200300.100.1.3": "mail",
   "urn:oid:1.3.6.1.4.1.5923.1.1.1.1": "eduPersonAffiliation",
   "urn:oid:1.3.6.1.4.1.5923.1.1.1.5": "eduPersonPrimaryAffiliation",
-  "urn:oid:1.3.6.1.4.1.6537.1.25": "brownStatus",
-  "urn:oid:2.5.4.4": "sn",
-  "urn:oid:1.3.6.1.4.1.5923.1.1.1.9": "eduPersonScopedAffiliation",
-  "urn:oid:1.3.6.1.4.1.6537.1.63": "machineID",
-  "urn:oid:1.3.6.1.4.1.6537.1.14": "brownNetID",
-  "urn:oid:1.3.6.1.4.1.6537.1.19": "brownUUID",
-  "https://www.brown.edu/shibboleth/attributes/brownAuthenticationProfiles": "brownAuthenticationProfiles",
-  "urn:oid:1.3.6.1.4.1.6537.1.16": "brownBannerID",
-  "urn:oid:1.3.6.1.4.1.5923.1.5.1.1": "isMemberOf",
-  "urn:oid:0.9.2342.19200300.100.1.3": "mail",
   "urn:oid:1.3.6.1.4.1.5923.1.1.1.6": "eduPersonPrincipalName",
-  "urn:oid:2.5.4.42": "givenName",
+  "urn:oid:2.16.840.1.113730.3.1.241": "displayName",
   "urn:oid:2.5.4.12": "title",
-  "urn:oid:1.3.6.1.4.1.5923.1.1.1.7": "eduPersonEntitlement",
-  "urn:oid:1.3.6.1.4.1.6537.1.68": "brownAdvanceId",
-  "urn:oid:1.3.6.1.4.1.6537.1.13": "brownBruID",
-  "urn:oid:1.3.6.1.4.1.6537.1.28": "brownType",
-  "urn:oid:1.3.6.1.4.1.6537.1.15": "brownShortID",
-  "urn:oid:2.16.840.1.113730.3.1.241": "displayName"
-};
+  "urn:oid:2.5.4.4": "sn",
+  "urn:oid:2.5.4.42": "givenName"
+}, Meteor.settings.saml.attributeMap);
 
 Accounts.saml.isSamlAttribute = function (attribute) {
  return _.has(Accounts.saml._attributeMap, attribute);
