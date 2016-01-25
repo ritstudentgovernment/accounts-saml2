@@ -10,12 +10,12 @@ Accounts.saml.insertProfile = function (credentialToken, profile, callback) {
 }
 
 Accounts.saml.retrieveProfile = function (credentialToken) {
-  var profile = SAMLTokens.findOne({credentialToken: credentialToken}).profile;
+  var token = SAMLTokens.findOne({credentialToken: credentialToken});
 
   // Delete token from collection
-  SAMLTokens.delete({credentialToken: credentialToken});
+  SAMLTokens.remove({credentialToken: credentialToken});
 
-  return profile;
+  return token ? token.profile : null;
 }
 
 Accounts.saml.insertRedirectPath = function (credentialToken, redirectPath) {
@@ -25,12 +25,12 @@ Accounts.saml.insertRedirectPath = function (credentialToken, redirectPath) {
 
 Accounts.saml.retrieveRedirectPath = function (credentialToken) {
   var token = SAMLTokens.findOne({credentialToken: credentialToken});
-  return token.redirectPath;
+  return token ? token.redirectPath : null;
 }
 
 Meteor.methods({
-  insertCredentialForRedirect: function(credentialToken, redirectPath) {
-    Accounts.saml.insertRedirectPath(credentialToken, redirectPath, function(err) {
+  insertCredentialForRedirect: function (credentialToken, redirectPath) {
+    Accounts.saml.insertRedirectPath(credentialToken, redirectPath, function (err) {
       if(err) {
         console.log(err);
       } else {
