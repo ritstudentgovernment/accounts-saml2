@@ -22,7 +22,7 @@ Accounts.saml._attributeMap = _.extend({
   "urn:oid:2.5.4.12": "title",
   "urn:oid:2.5.4.4": "sn",
   "urn:oid:2.5.4.42": "givenName"
-}, Meteor.settings.saml.attributeMap);
+}, Meteor.settings.saml.attributeMap || {});
 
 Accounts.saml.isSamlAttribute = function (attribute) {
  return _.has(Accounts.saml._attributeMap, attribute);
