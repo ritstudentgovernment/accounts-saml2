@@ -41,8 +41,8 @@ Accounts.registerLoginHandler(function (loginRequest) {
   if (loginRequest.credentialToken && loginRequest.saml) {
     var profile = Accounts.saml.retrieveProfile(loginRequest.credentialToken);
     if (profile) {
+      updateUserProfile(profile);
       var user = Meteor.users.findOne({email: profile.email});
-      updateUserProfile(user, profile);
       return addLoginTokenToUser(user);
     } else {
       throw new Error("Could not find a profile with the specified credentialToken.");
@@ -71,8 +71,9 @@ var cleanResponseForMongo = function (samlResponse) {
   return profile;
 }
 
-var updateUserProfile = function (user, profile) {
-  Meteor.users.update(user, { $set: {profile: profile} }, {upsert:true});
+var updateUserProfile = function (profile) {
+  Meteor.users.update({email: profile.email},
+      { $set: {email: profile.email, profile: profile} }, {upsert:true});
 };
 
 var addLoginTokenToUser = function (user) {
