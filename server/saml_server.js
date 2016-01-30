@@ -36,7 +36,6 @@ var init = function () {
       return done(null, profile); 
     }
   );
-
 };
 
 init();
