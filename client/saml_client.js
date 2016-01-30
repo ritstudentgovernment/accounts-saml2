@@ -7,16 +7,46 @@ Meteor.call("getLoginUrl", function(err, res) {
   loginUrl = res;
 });
 
+Meteor.startup(function () {
+  var saml = Reload._migrationData("saml");
+  if (! (saml && saml.credentialToken)) {
+    return;
+  }
+
+  var methodArguments = [{saml: true, credentialToken: saml.credentialToken}];
+  Accounts.callLoginMethod({
+    methodArguments: methodArguments,
+    userCallback: function (err) {
+      Accounts._pageLoadLogin({
+        type: "saml",
+        allowed: !err,
+        error: err,
+        methodName: "login",
+        methodArguments: methodArguments
+      });
+    }
+  });
+});
+
+Accounts.saml.saveDataAndRedirect = function(credentialToken) {
+  Reload._onMigrate("saml", function () {
+    return [true, {credentialToken: credentialToken}];
+  });
+  Reload._migrate(null, {immediateMigration: true});
+  Meteor.call("insertCredentialForRedirect", credentialToken,
+    window.location.pathname, function (err, res) {
+      if (err) {
+        console.error(err);
+      } else {
+        console.log("Succesfully saved credential, redirecting...");
+        window.location = loginUrl + "?RelayState=" + credentialToken;
+      }
+    });
+};
+
 Accounts.saml.initiateLogin = function(options, callback) {
   if(options.loginStyle === "redirect") {
-    // Redirect — first we insert the credential and current path
-    // into cache. Then we redirect to the IdP for login.
-    Meteor.call("insertCredentialForRedirect", options.credentialToken,
-      window.location.pathname, function(err, res) {
-        console.log("Succesfully saved credential, redirecting...");
-        window.location.replace(loginUrl + "?RelayState=" + 
-          options.credentialToken);
-    })
+    Accounts.saml.saveDataAndRedirect(options.credentialToken);
   } else {
     // Popup
     var popup = openCenteredPopup(Meteor.absoluteUrl(loginUrl + 
@@ -54,10 +84,10 @@ var openCenteredPopup = function(url, width, height) {
   var features = ('width=' + width + ',height=' + height +
                   ',left=' + left + ',top=' + top + ',scrollbars=yes');
 
-  var newwindow = window.open(url, 'Login', features);
-  if (newwindow.focus)
-    newwindow.focus();
-  return newwindow;
+  var popup = window.open(url, 'loginPopup', features);
+  if (popup.focus)
+    popup.focus();
+  return popup;
 };
 
 Meteor.loginWithSaml = function(options, callback) {

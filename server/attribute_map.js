@@ -1,20 +1,18 @@
-/* SAML Attributes cannot be stored directly in Mongo due to dot notation.
- * This implementation converts SAML attributes to their friendly format.
- * Not all SAML attributes included.
- */
+// SAML Attributes cannot be stored directly in Mongo due to dot notation.
+// This implementation converts SAML attributes to their friendly format.
+// Not all SAML attributes included.
 
 if (!Accounts.saml) {
   Accounts.saml = {};
 }
 
-/**
- * List of attributes Brown gives us. Not the cleanest way
- * to treat this information, since it can change in the future.
- * Unfortunately passport-saml doesn't automatically parse FriendlyNames,
- * which is why we have a manually prescribed list.
- *
- * Someday in the future, we should automate the parsing of FriendlyNames.
- */
+// List of attributes Brown gives us. Not the cleanest way
+// to treat this information, since it can change in the future.
+// Unfortunately passport-saml doesn't automatically parse FriendlyNames,
+// which is why we have a manually prescribed list.
+//
+// Someday in the future, we should automate the parsing of FriendlyNames.
+ 
 Accounts.saml._attributeMap = {
   "urn:oid:1.3.6.1.4.1.5923.1.1.1.1": "eduPersonAffiliation",
   "urn:oid:1.3.6.1.4.1.5923.1.1.1.5": "eduPersonPrimaryAffiliation",
@@ -46,4 +44,3 @@ Accounts.saml.isSamlAttribute = function (attribute) {
 Accounts.saml.getSamlAttributeFriendlyName = function (attribute) {
   return Accounts.saml._attributeMap[attribute];
 }
-

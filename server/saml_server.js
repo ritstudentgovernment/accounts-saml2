@@ -39,9 +39,9 @@ init();
 
 Accounts.registerLoginHandler(function (loginRequest) {
   if (loginRequest.credentialToken && loginRequest.saml) {
-    var profile = Accounts.saml.retrieveCredential(loginRequest.credentialToken);
+    var profile = Accounts.saml.retrieveProfile(loginRequest.credentialToken);
     if (profile) {
-      updateUserProfile(samlResponse);
+      updateUserProfile(profile);
       var user = Meteor.users.findOne({email: profile.email});
       return addLoginTokenToUser(user);
     } else {
@@ -52,8 +52,8 @@ Accounts.registerLoginHandler(function (loginRequest) {
 
 var cleanResponseForMongo = function (samlResponse) {
   var profile = {};
-  for (var key in samlResponse.profile) {
-    var value = samlResponse.profile[key];
+  for (var key in samlResponse) {
+    var value = samlResponse[key];
     // Only save values that are Strings or arrays, not objects. This avoids 
     // having to make sure that the inner keys don't have periods.
     if (typeof value === "string" || value.constructor === Array) {
@@ -72,8 +72,8 @@ var cleanResponseForMongo = function (samlResponse) {
 }
 
 var updateUserProfile = function (profile) {
-  Meteor.users.update({email: samlResponse.profile.email}, 
-    {$set: {email: samlResponse.profile.email, profile: profile}}, {upsert: true});
+  Meteor.users.update({email: profile.email},
+      { $set: {email: profile.email, profile: profile} }, {upsert:true});
 };
 
 var addLoginTokenToUser = function (user) {
@@ -97,9 +97,7 @@ WebApp.connectHandlers
         // Redirect to IdP (SP -> IdP)
         if (url.parse(req.url).pathname === Meteor.settings.saml.loginUrl) {
           Accounts.saml.samlStrategy._saml.getAuthorizeUrl(req, function (err, result) {
-            res.writeHead(302, {
-              'Location': result
-            });
+            res.writeHead(302, { 'Location': result });
             res.end();
           });
         }
@@ -110,12 +108,17 @@ WebApp.connectHandlers
             if (!err) { 
               credentialToken = req.body.RelayState;
               Accounts.saml.insertProfile(credentialToken, cleanResponseForMongo(result));
+              if (Meteor.settings.saml.loginStyle === "redirect") {
+                var redirectPath = Accounts.saml.retrieveRedirectPath(credentialToken) || Meteor.absoluteUrl();
+                res.writeHead(302, { "Location": redirectPath });
+                return res.end();
+              }
             } else {
               console.log("err", err);
               console.log("req.body", req.body);
             }
 
-            onSamlEnd(err, res, credentialToken);
+            onSamlEnd(err, res);
           }));
         }
         // Metadata requests
@@ -134,32 +137,16 @@ WebApp.connectHandlers
     }).run();
 });
 
-var onSamlEnd = function (err, res, credentialToken) {
+var onSamlEnd = function (err, res) {
   res.writeHead(200, {'Content-Type': 'text/html'});
   var content;
 
   if(err) {
     console.log(err);
     content = "An error occured in the SAML Middleware process.";
-  } else if(credentialToken) {
-    console.log(credentialToken);
-    var redirectPath = Accounts.saml.retrieveRedirectPath(credentialToken);
-    console.log(redirectPath);
-    if(redirectPath) {
-      // If redirect login, call loginMethod and redirect to URL.
-      Accounts.callLoginMethod({
-        methodArguments: [{saml: true, credentialToken: credentialToken}],
-        userCallback: function() {
-          res.writeHead(302, {
-            'Location': redirectPath
-          });
-          res.end();
-        }
-      });
-    } else {
-      // If popup login, close popup and let client call loginMethod.
-      content = "<html><head><script>window.close()</script></head></html>";
-    }
+  } else {
+    // If popup login, close popup and let client call loginMethod.
+    content = "<html><head><script>window.close()</script></head></html>";
   }
 
   res.end(content, 'utf-8');
