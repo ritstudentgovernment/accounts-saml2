@@ -1,23 +1,37 @@
-/* This is an in-memory credentialToken => samlResponse cache.
- * This implementation does not scale beyond a single instance.
- */
-
 if (!Accounts.saml) {
   Accounts.saml = {};
 }
 
-Accounts.saml._loginResultForCredentialToken = {};
+SAMLTokens = new Mongo.Collection("saml_tokens");
 
-// Inserted during IdP -> SP Callback
-Accounts.saml.insertCredential = function (credentialToken, profile) {
-  Accounts.saml._loginResultForCredentialToken[credentialToken] = {profile: profile};
-};
+Accounts.saml.insertProfile = function (credentialToken, profile, callback) {
+  SAMLTokens.update({credentialToken: credentialToken}, 
+    {$set: {profile: profile}}, {upsert: true}, callback);
+}
 
-// Retrieved in account login handler
-Accounts.saml.retrieveCredential = function(credentialToken) {
-  var result = Accounts.saml._loginResultForCredentialToken[credentialToken];
-  delete Accounts.saml._loginResultForCredentialToken[credentialToken];
-  return result;
-};
+Accounts.saml.retrieveProfile = function (credentialToken) {
+  var token = SAMLTokens.findOne({credentialToken: credentialToken});
+  SAMLTokens.remove({credentialToken: credentialToken}); // Delete token from collection
+  return token ? token.profile : null;
+}
 
+Accounts.saml.isRedirect = function(credentialToken) {
+  var token = SAMLTokens.findOne({credentialToken: credentialToken});
+  return (token && token.redirect);
+}
 
+Accounts.saml.insertRedirectPath = function (credentialToken, redirectPath) {
+  SAMLTokens.update({credentialToken: credentialToken}, 
+    {$set: {redirect: true, redirectPath: redirectPath}}, {upsert: true});
+}
+
+Accounts.saml.retrieveRedirectPath = function (credentialToken) {
+  var token = SAMLTokens.findOne({credentialToken: credentialToken});
+  return token ? token.redirectPath : null;
+}
+
+Meteor.methods({
+  insertCredentialForRedirect: function (credentialToken, redirectPath) {
+    Accounts.saml.insertRedirectPath(credentialToken, redirectPath);
+  }
+});
