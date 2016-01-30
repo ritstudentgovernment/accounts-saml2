@@ -6,6 +6,9 @@ var url = Npm.require('url');
 var samlOpts = {};
 
 var init = function () {
+  if(!(Meteor.settings || Meteor.settings.saml))
+    throw new Error("No SAML settings specified.")
+
   samlOpts = _.pick(Meteor.settings.saml, "protocol", "host", "path", "callbackUrl",
                "entryPoint", "issuer", "cert", "privateCert", "decryptionPvk", "additionalParams",
                "additionalAuthorizeParams", "identifierFormat", "acceptedClockSkewMs",
@@ -45,7 +48,9 @@ Accounts.registerLoginHandler(function (loginRequest) {
       var user = Meteor.users.findOne({email: profile.email});
       return addLoginTokenToUser(user);
     } else {
-      throw new Error("Could not find a profile with the specified credentialToken.");
+      throw new Meteor.Error("no-credential-token", 
+        "Could not find a samlResponse with the specified credentialToken.",
+        loginRequest.credentialToken);
     }
   }
 });
