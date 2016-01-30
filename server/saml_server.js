@@ -113,7 +113,7 @@ WebApp.connectHandlers
             if (!err) { 
               credentialToken = req.body.RelayState;
               Accounts.saml.insertProfile(credentialToken, cleanResponseForMongo(result));
-              if (Meteor.settings.saml.loginStyle === "redirect") {
+              if (Accounts.saml.isRedirect(credentialToken)) {
                 var redirectPath = Accounts.saml.retrieveRedirectPath(credentialToken) || Meteor.absoluteUrl();
                 res.writeHead(302, { "Location": redirectPath });
                 return res.end();
